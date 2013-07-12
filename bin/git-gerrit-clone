@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Getopt::Long qw();
+use Git::Repository;
+
+my @args = intercept_args(@ARGV);
+Git::Repository->run('clone', '--origin', 'gerrit', @args);
+
+sub intercept_args {
+    my @args = @_;
+
+    my $parser = Getopt::Long::Parser->new(config => ['pass_through']);
+
+    my $origin;
+    $parser->getoptionsfromarray(\@args, 'origin|o=s' => \$origin);
+
+    if ($origin) {
+        die '--origin/-o is not allowed';
+    }
+
+    return @args;
+}

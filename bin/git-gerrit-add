@@ -1,0 +1,12 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Git::Repository;
+
+my $name = shift @ARGV;
+my $url  = shift @ARGV;
+
+my $repo = Git::Repository->new();
+$repo->run('remote', 'add', '--fetch', '--tags', $name, $url);

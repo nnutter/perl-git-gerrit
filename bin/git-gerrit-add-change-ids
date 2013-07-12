@@ -1,0 +1,49 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use URI;
+use Git::Repository qw(Hooks);
+use File::Spec;
+
+
+my $repo = Git::Repository->new();
+
+my $remote = Git::Repository::Remote->new(
+    repository => $repo,
+    name => 'gerrit',
+);
+my ($host, $port, $user) = parse_gerrit_url($remote->url);
+
+my @cmd = ('scp');
+if ($port) { push @cmd, '-P', $port }
+push @cmd, commit_hook_url($host, $user);
+push @cmd, File::Spec->join($repo->git_dir, 'hooks', '');
+system(@cmd);
+
+$repo->run('rebase', '--interactive',
+    '--exec', 'git reset --soft HEAD^ && git commit -C ORIG_HEAD');
+
+sub parse_gerrit_url {
+    my $url = shift;
+
+    unless (index($url, 'ssh://') == 0) {
+        die 'can only parse ssh:// URLs';
+    }
+
+    my $uri = URI->new($url);
+    return ($uri->host, $uri->port, $uri->user);
+}
+
+sub commit_hook_url {
+    my ($host, $user) = @_;
+
+    my $url = '';
+    if ($user) {
+        $url .= $user . '@';
+    }
+    $url .= $host . ':hooks/commit-msg';
+
+    return $url;
+}
