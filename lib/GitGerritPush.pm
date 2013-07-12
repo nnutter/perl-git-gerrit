@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-package GitReviewPush;
+package GitGerritPush;
 
 use Git::Repository qw(Log Branch Tag Hooks);
 

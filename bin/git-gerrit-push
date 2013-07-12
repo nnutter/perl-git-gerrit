@@ -3,5 +3,5 @@
 use strict;
 use warnings;
 
-use GitReviewPush;
-GitReviewPush::main();
+use GitGerritPush;
+GitGerritPush::main();
