@@ -51,6 +51,8 @@ sub target {
 sub validate {
     my $repo = shift;
 
+    validate_commit_hook($repo);
+
     my $branch = $repo->branch;
     validate_branch($branch);
 
@@ -66,6 +68,15 @@ sub validate {
 
     if (@changes > 1) {
         validate_topic_branch($branch);
+    }
+}
+
+sub validate_commit_hook {
+    my $repo = shift;
+
+    my $commit_hook = (grep { $_ eq /[\/\\]commit-msg$/ } $repo->hooks)[0]
+    unless ($commit_hook) {
+        die 'commit-msg hook is missing';
     }
 }
 
