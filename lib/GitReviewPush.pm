@@ -3,46 +3,122 @@ use warnings;
 
 package GitReviewPush;
 
+use feature ':5.10';
+
+use Git::Repository qw(Log Branch Tag Hooks);
+
+sub repo {
+    state $repo = Git::Repository->new();
+    return $repo;
+}
+
 sub main {
     my %options = @_;
-    # validate options
 
-    unless (validate_upstream()) {
-        return (undef, 'invalid upstream');
-    }
+    my $repo = repo();
+    my $branch = $repo->branch;
+    my $upstream = $branch->upstream;
+    my $remote = $upstream->remote;
 
-    my $upstream = GitQuery->upstream;
-    my $branch = GitQuery->branch;
-    my @changes = GitQuery->log($upstream, $branch);
-    if (@changes == 0) {
-        return (undef, 'no changes');
-    } elsif (@changes > 1) {
-        # create a branch
-        # reset back to upstream
-        # switch to branch
+    validate($repo);
+
+    my $target = target($branch->name, $upstream->remote_branch_name);
+    $remote->push($branch->name, $target);
+
+    if (!topic_branch($branch)) {
+        # message
+        # tag?
+        $branch->reset(
+            mode => 'hard',
+            commit => $upstream->name,
+        );
     }
-    push_branch();
-    # if --reset
-    #   if feature branch
-    #       checkout non_feature
-    #   else
-    #       tag?
-    #       reset to upstream
+}
+
+sub topic_branch {
+    my $branch = shift;
+    my $upstream = $branch->upstream;
+    return (
+        $upstream->remote_branch_name ne $branch->name
+        ? $branch->name
+        : undef);
+}
+
+sub target {
+    my $local_name = shift;
+    my $remote_name = shift;
+
+    my $target = join('/', 'refs', 'for', $remote_name);
+    if ($local_name ne $remote_name) {
+        $target = join('/', $target, $local_name);
+    }
+    return $target;
+}
+
+sub validate {
+    my $repo = shift;
+
+    my $branch = $repo->branch;
+    validate_branch($branch);
+
+    my $upstream = $branch->upstream;
+    validate_upstream($upstream);
+
+    my $remote = $upstream->remote;
+    validate_remote($remote);
+
+    my $range = join('..', $upstream->name, $branch->name);
+    my @changes = $repo->log($range);
+    validate_changes(@changes);
+
+    if (@changes > 1) {
+        validate_topic_branch($branch);
+    }
+}
+
+sub validate_branch {
+    my $branch = shift;
+    unless ($branch) {
+        die 'branch is undefined';
+    }
+    unless ($branch->isa('Git::Repository::Branch::Local')) {
+        die 'branch is not expected type';
+    }
 }
 
 sub validate_upstream {
-    my $upstream_remote = GitQuery->upstream_remote;
-    my $upstream_branch = GitQuery->upstream_branch;
-    return ($upstream_remote && $upstream_branch);
+    my $upstream = shift;
+    unless ($upstream) {
+        die 'upstream is undefined';
+    }
 }
 
-sub push_branch {
-    my $branch = GitQuery->branch;
-    my $upstream_remote = GitQuery->upstream_remote;
-    my $upstream_branch = GitQuery->upstream_branch;
+sub validate_remote {
+    my $remote = shift;
+    unless ($remote) {
+        die 'remote is undefined';
+    }
+    unless ($remote->name eq 'gerrit') {
+        die 'remote is not gerrit';
+    }
+}
 
-    my $refname = $branch . ':refs/for/' . $upstream_branch;
-    return run('git', 'push', $upstream_remote, $refname);
+sub validate_changes {
+    my @changes = shift;
+    unless (@changes) {
+        die 'no changes';
+    }
+    my @missing_change_id = grep { $_->body !~ /Change-IDs:/ } @changes;
+    if (@missing_change_id) {
+        die 'missing Change-IDs';
+    }
+}
+
+sub validate_topic_branch {
+    my $branch = shift;
+    unless (topic_branch($branch)) {
+        die 'not a topic branch';
+    }
 }
 
 1;
