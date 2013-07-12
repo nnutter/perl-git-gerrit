@@ -1,0 +1,9 @@
+[submodule "perl-git-repository-plugin-branch"]
+	path = perl-git-repository-plugin-branch
+	url = /Users/nnutter/Code/bare/perl-git-repository-plugin-branch.git
+[submodule "perl-git-repository-plugin-hooks"]
+	path = perl-git-repository-plugin-hooks
+	url = /Users/nnutter/Code/bare/perl-git-repository-plugin-hooks.git
+[submodule "perl-git-repository-plugin-tag"]
+	path = perl-git-repository-plugin-tag
+	url = /Users/nnutter/Code/bare/perl-git-repository-plugin-tag.git
