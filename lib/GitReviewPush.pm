@@ -3,19 +3,12 @@ use warnings;
 
 package GitReviewPush;
 
-use feature ':5.10';
-
 use Git::Repository qw(Log Branch Tag Hooks);
-
-sub repo {
-    state $repo = Git::Repository->new();
-    return $repo;
-}
 
 sub main {
     my %options = @_;
 
-    my $repo = repo();
+    my $repo = Git::Repository->new();
     my $branch = $repo->branch;
     my $upstream = $branch->upstream;
     my $remote = $upstream->remote;
