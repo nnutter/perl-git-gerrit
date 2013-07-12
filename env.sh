@@ -19,6 +19,8 @@ done
 PERL5LIB="$(pwd)/lib:$PERL5LIB"
 export PERL5LIB
 
+export PATH="$(pwd)/bin:$PATH"
+
 cd "$OWD"
 
 set +o nounset
