@@ -6,8 +6,6 @@ package GitGerritPush;
 use Git::Repository qw(Log Branch Tag Hooks);
 
 sub main {
-    my %options = @_;
-
     my $repo = Git::Repository->new();
     my $branch = $repo->branch;
     my $upstream = $branch->upstream;
