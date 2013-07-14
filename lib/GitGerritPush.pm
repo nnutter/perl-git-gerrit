@@ -72,7 +72,7 @@ sub validate {
 sub validate_commit_hook {
     my $repo = shift;
 
-    my $commit_hook = (grep { $_ eq /[\/\\]commit-msg$/ } $repo->hooks)[0]
+    my $commit_hook = (grep { $_ eq /[\/\\]commit-msg$/ } $repo->hooks)[0];
     unless ($commit_hook) {
         die 'commit-msg hook is missing';
     }
